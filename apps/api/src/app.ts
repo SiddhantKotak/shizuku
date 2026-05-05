@@ -15,6 +15,7 @@ import multipartPlugin from './plugins/multipart.js';
 import rateLimitPlugin from './plugins/rateLimit.js';
 import requestIdPlugin, { generateRequestId } from './plugins/requestId.js';
 import securityPlugin from './plugins/security.js';
+import sentryPlugin from './plugins/sentry.js';
 import swaggerPlugin from './plugins/swagger.js';
 import authRoutes from './routes/auth/index.js';
 import documentRoutes from './routes/documents/index.js';
@@ -78,6 +79,9 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   // Plugins (order matters)
   await app.register(requestIdPlugin);
   await app.register(securityPlugin);
+  // Sentry attaches `onRequest` + `onError` hooks; register early so it sees
+  // every request. No-op when SENTRY_DSN is unset (dev/CI default).
+  await app.register(sentryPlugin);
   // Swagger registers BEFORE routes so it captures every route's schema metadata.
   await app.register(swaggerPlugin);
   if (opts.rateLimit !== false) {

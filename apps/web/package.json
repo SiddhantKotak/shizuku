@@ -15,6 +15,7 @@
   "dependencies": {
     "@gsap/react": "^2.1.0",
     "@hookform/resolvers": "^3.9.0",
+    "@sentry/react": "^10.51.0",
     "@shizuku/types": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-router": "^1.95.0",
@@ -22,8 +23,8 @@
     "easystarjs": "^0.4.4",
     "gsap": "^3.12.5",
     "mitt": "^3.0.1",
-    "phaser": "^3.86.0",
     "pdfjs-dist": "^4.7.0",
+    "phaser": "^3.86.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-hook-form": "^7.54.0",
