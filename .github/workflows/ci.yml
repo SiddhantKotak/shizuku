@@ -17,30 +17,44 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # ─────────────────────────────────────────────────────────────────────
+    # Throwaway Postgres for this one CI run.
+    #
+    # GitHub Actions spins this container up inside the isolated runner VM,
+    # uses it for the test job, then destroys both the container AND the VM
+    # when the job finishes. Nothing is published, persisted, or reachable
+    # from outside the runner. The "password" below is just the value the
+    # ephemeral container will accept as login — there is no real credential
+    # here. Same pattern recommended in GitHub's own docs:
+    # https://docs.github.com/en/actions/use-cases-and-examples/using-containerized-services/about-service-containers
+    # ─────────────────────────────────────────────────────────────────────
     services:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: shizuku
-          POSTGRES_PASSWORD: shizuku_ci
-          POSTGRES_DB: shizuku_ci
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_throwaway_not_a_real_secret
+          POSTGRES_DB: ci_db
         ports:
           - 5432:5432
-        # The pgvector image inherits the postgres healthcheck contract.
         options: >-
-          --health-cmd "pg_isready -U shizuku -d shizuku_ci"
+          --health-cmd "pg_isready -U ci_user -d ci_db"
           --health-interval 2s
           --health-timeout 2s
           --health-retries 30
 
     env:
-      # Database — direct + pooled point at the same CI service container.
-      DATABASE_URL: postgresql://shizuku:shizuku_ci@localhost:5432/shizuku_ci
-      DATABASE_DIRECT_URL: postgresql://shizuku:shizuku_ci@localhost:5432/shizuku_ci
+      # Both URLs point at the same in-VM container (no PgBouncer in CI, so
+      # tests don't need the direct/pooled split that the real Neon setup has).
+      DATABASE_URL: postgresql://ci_user:ci_throwaway_not_a_real_secret@localhost:5432/ci_db
+      DATABASE_DIRECT_URL: postgresql://ci_user:ci_throwaway_not_a_real_secret@localhost:5432/ci_db
 
-      # Auth — fake values, only used by the test harness.
-      JWT_SECRET: ci_jwt_secret_thirty_two_or_more_characters_long_xx
-      JWT_REFRESH_COOKIE_SECRET: ci_refresh_secret_thirty_two_or_more_xx_xx_xx_xx_x
+      # Hardcoded test-only JWT secrets — Zod schema requires min 32 chars,
+      # these strings exist only inside the runner VM and never sign real
+      # tokens. Real JWT_SECRET / JWT_REFRESH_COOKIE_SECRET live in Railway
+      # for the deployed API.
+      JWT_SECRET: ci_jwt_secret_not_used_outside_this_vm_ever_xxxxxxxxxx
+      JWT_REFRESH_COOKIE_SECRET: ci_refresh_secret_not_used_outside_this_vm_ever_xxxxxxxxx
 
       # Cost guards stay on defaults; bumping them in tests lets boundary tests
       # exercise the 100-chat / 5-PDF limits without needing 100 real chats.
@@ -51,10 +65,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Don't pass `version:` here — the action reads `packageManager` from
+      # package.json (`"packageManager": "pnpm@10.0.0"`). Specifying both is
+      # a hard error: ERR_PNPM_BAD_PM_VERSION.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node 22
         uses: actions/setup-node@v4
