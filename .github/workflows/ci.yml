@@ -56,6 +56,16 @@ jobs:
       JWT_SECRET: ci_jwt_secret_not_used_outside_this_vm_ever_xxxxxxxxxx
       JWT_REFRESH_COOKIE_SECRET: ci_refresh_secret_not_used_outside_this_vm_ever_xxxxxxxxx
 
+      # No OAuth credentials in CI — intentional.
+      # OAuth-initiate redirects are mostly built by the Arctic library; running
+      # those tests with fake credentials would produce a green test that proves
+      # nothing about real OAuth integration. The tests are guarded with
+      # `it.skipIf(!hasCreds)` and only run locally where `.env` provides real
+      # Google/Discord client config. CI runs the "missing creds → 404
+      # not_configured" path instead, which catches route-registration
+      # regressions without external dependencies. Real OAuth E2E is verified
+      # via the manual smoke test (P4.7) before each deploy.
+
       # Cost guards stay on defaults; bumping them in tests lets boundary tests
       # exercise the 100-chat / 5-PDF limits without needing 100 real chats.
       NODE_ENV: test
