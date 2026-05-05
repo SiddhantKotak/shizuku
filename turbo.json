@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["tsconfig.base.json", ".env.example"],
-  "globalEnv": ["NODE_ENV"],
+  "globalEnv": ["NODE_ENV", "LOG_LEVEL", "CI"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -18,7 +18,33 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "env": [
+        "DATABASE_URL",
+        "DATABASE_DIRECT_URL",
+        "DB_DNS_SERVERS",
+        "JWT_SECRET",
+        "JWT_REFRESH_COOKIE_SECRET",
+        "OPENAI_API_KEY",
+        "OPENAI_CHAT_MODEL",
+        "OPENAI_EMBEDDING_MODEL",
+        "RESEND_API_KEY",
+        "RESEND_FROM_EMAIL",
+        "R2_ENDPOINT",
+        "R2_ACCESS_KEY_ID",
+        "R2_SECRET_ACCESS_KEY",
+        "R2_BUCKET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_REDIRECT_URI",
+        "DISCORD_CLIENT_ID",
+        "DISCORD_CLIENT_SECRET",
+        "DISCORD_REDIRECT_URI",
+        "WEB_ORIGIN",
+        "COST_LIMIT_CHATS_PER_DAY",
+        "COST_LIMIT_PDFS_PER_USER",
+        "COST_LIMIT_PDF_MAX_BYTES"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^build"],

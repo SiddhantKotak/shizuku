@@ -97,3 +97,19 @@ jobs:
 
       - name: Test (vitest, sequential)
         run: pnpm test
+
+      # Visible-on-failure diagnostics. The vitest output already includes
+      # failing test names; this step also dumps the DB schema + env so the
+      # next iteration doesn't require log archaeology.
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          echo "::group::env (sensitive vars redacted)"
+          env | grep -Ei '^(node|database|jwt|log|ci)' | sed -E 's/(_PASSWORD|_SECRET)=.*/\1=[REDACTED]/'
+          echo "::endgroup::"
+          echo "::group::pg version + extensions"
+          PGPASSWORD=ci_throwaway_not_a_real_secret psql -h localhost -U ci_user -d ci_db -c "SELECT version();" -c "SELECT extname FROM pg_extension;" || true
+          echo "::endgroup::"
+          echo "::group::tables"
+          PGPASSWORD=ci_throwaway_not_a_real_secret psql -h localhost -U ci_user -d ci_db -c "\dt" || true
+          echo "::endgroup::"
