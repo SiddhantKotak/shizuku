@@ -1,0 +1,45 @@
+/*
+ * Design tokens — single source of truth for color, spacing, motion.
+ * Tailwind reads these via tailwind.config.ts.
+ *
+ * Color values use bare RGB triplets (no rgb() wrapper) so Tailwind's
+ * <alpha-value> placeholder can compose them.
+ */
+:root {
+  /* Brand */
+  --color-ink: 26 19 32;
+  --color-cream: 250 246 235;
+
+  /* Pet species */
+  --color-ember: 230 96 64;
+  --color-ember-glow: 255 152 96;
+  --color-ripple: 80 156 200;
+  --color-ripple-glow: 144 200 224;
+  --color-quill: 96 96 128;
+  --color-quill-glow: 168 160 192;
+
+  /* Surfaces */
+  --color-surface-base: 250 246 235;
+  --color-surface-raised: 255 252 246;
+  --color-surface-overlay: 240 232 218;
+
+  /* Accent */
+  --color-accent: 158 102 200;
+  --color-accent-subtle: 224 208 240;
+
+  /* Motion */
+  --motion-fast: 150ms;
+  --motion-base: 250ms;
+  --motion-slow: 450ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface-base: 26 19 32;
+    --color-surface-raised: 36 27 44;
+    --color-surface-overlay: 50 38 60;
+    --color-cream: 250 246 235;
+    /* keep brand + pet colors stable across themes */
+  }
+}

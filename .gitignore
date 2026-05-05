@@ -1,0 +1,64 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build artifacts
+dist
+build
+.turbo
+*.tsbuildinfo
+
+# Test
+coverage
+.vitest
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.recommended
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deployments
+.vercel
+.railway
+.netlify
+
+# Drizzle
+drizzle/meta/_journal.json.bak
+
+# Generated routes (TanStack Router)
+**/routeTree.gen.ts.bak
+
+# Playwright
+test-results
+playwright-report
+playwright/.cache
+
+# Phaser asset working files (only commit cleaned outputs)
+assets/raw
+*.aseprite~
+
+# Reference materials (kept locally, not in git)
+2007069a-*.pdf
+file.txt
+
+# OpenAPI generated specs (regenerated on every API boot via /docs)
+apps/api/openapi-spec.json

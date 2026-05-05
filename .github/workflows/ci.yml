@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel duplicate runs on the same branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: lint + typecheck + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: shizuku
+          POSTGRES_PASSWORD: shizuku_ci
+          POSTGRES_DB: shizuku_ci
+        ports:
+          - 5432:5432
+        # The pgvector image inherits the postgres healthcheck contract.
+        options: >-
+          --health-cmd "pg_isready -U shizuku -d shizuku_ci"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+
+    env:
+      # Database — direct + pooled point at the same CI service container.
+      DATABASE_URL: postgresql://shizuku:shizuku_ci@localhost:5432/shizuku_ci
+      DATABASE_DIRECT_URL: postgresql://shizuku:shizuku_ci@localhost:5432/shizuku_ci
+
+      # Auth — fake values, only used by the test harness.
+      JWT_SECRET: ci_jwt_secret_thirty_two_or_more_characters_long_xx
+      JWT_REFRESH_COOKIE_SECRET: ci_refresh_secret_thirty_two_or_more_xx_xx_xx_xx_x
+
+      # Cost guards stay on defaults; bumping them in tests lets boundary tests
+      # exercise the 100-chat / 5-PDF limits without needing 100 real chats.
+      NODE_ENV: test
+      LOG_LEVEL: error
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (ESLint flat config)
+        run: pnpm lint
+
+      - name: Typecheck (all packages)
+        run: pnpm typecheck
+
+      - name: Build (catches dist-only errors)
+        run: pnpm build
+
+      # The migrate runner also installs pgvector / citext / pgcrypto via
+      # CREATE EXTENSION IF NOT EXISTS (see packages/db/scripts/migrate.ts),
+      # so no separate init.sql step is needed.
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Test (vitest, sequential)
+        run: pnpm test

@@ -1,0 +1,19 @@
+services:
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: shizuku-pg-test
+    environment:
+      POSTGRES_USER: shizuku
+      POSTGRES_PASSWORD: shizuku_test
+      POSTGRES_DB: shizuku_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shizuku -d shizuku_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 15

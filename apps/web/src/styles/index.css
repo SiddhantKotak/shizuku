@@ -1,0 +1,31 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-surface-base text-ink font-sans;
+    font-feature-settings:
+      'cv11' 1,
+      'ss01' 1,
+      'ss03' 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Honor reduced-motion globally — GSAP presets and Phaser tweens read this too. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
