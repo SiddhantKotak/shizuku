@@ -995,7 +995,72 @@ The whole app is functional after step 8. Steps 9-13 are visual+cozy polish.
 
 ---
 
-_Last updated: P5 auth stubs + layout shell specs added; P9 / P11 / P13 / P15
-entries cross-referenced into the unified status table. Specs for ~35 components
-your Antigravity work needs to fill in. P7 + P14 remain asset-blocked per
-`ART_PLAN.md`._
+## Animation primitives (wired — use directly)
+
+`apps/web/src/lib/gsap/presets.ts` ships **7 reusable animations**. ALL of them
+honor `prefers-reduced-motion` automatically, so you don't have to think about
+accessibility per-call.
+
+| Preset                                                     | When to use                                   |
+| ---------------------------------------------------------- | --------------------------------------------- |
+| `fadeIn(el)`                                               | Any card / row / route content reveal — 0.25s |
+| `slideUpModal(el)`                                         | `<Modal>` primitive entry — 0.28s             |
+| `levelUpFlourish(el)`                                      | `LevelUpToast` (P14) — 0.6s pop+glow          |
+| `questClaimedBurst(el)`                                    | `QuestCard` claim button — 0.4s scale-pop     |
+| `pomodoroComplete({ ring, card, bell })`                   | `PomodoroTimer` phase end                     |
+| `evolutionSequence({ silhouette, particles, nameBanner })` | `EvolutionScene` — 4.5s timeline              |
+| `staggerIn(els, { delayBetween })`                         | Lists/grids on mount — quest panel, dashboard |
+
+Use via `useGSAP` from `apps/web/src/lib/gsap/useGsap.ts` (wraps `@gsap/react`):
+
+```ts
+import { useGSAP } from '../../lib/gsap/useGsap';
+import { fadeIn } from '../../lib/gsap/presets';
+const ref = useRef<HTMLDivElement>(null);
+useGSAP(() => fadeIn(ref.current), { scope: ref });
+```
+
+**ESLint rule**: raw `gsap.to` / `gsap.from` / `gsap.timeline` calls outside
+`apps/web/src/lib/gsap/` are blocked. If you need a new preset, add it to
+`presets.ts` and use it; don't reach for `gsap.to` inline.
+
+---
+
+## Phaser bridge (wired — P7 unblocked for non-art work)
+
+`apps/web/src/lib/phaser/` ships:
+
+| File                  | What it gives you                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
+| `bridge.ts`           | Typed mitt event bus + `useBridge(event, handler)` React hook                                       |
+| `assets.ts`           | Asset path manifest with `exists` flags — flip `false → true` per ART_PLAN entry                    |
+| `scenes/BootScene.ts` | Asset preload + progress bar; loads only `exists: true` assets                                      |
+| `scenes/RoomScene.ts` | Placeholder room (colored squares for player/pet/desk) — emits `OPEN_CHAT` / `OPEN_READER` on click |
+| `createGame.ts`       | Factory that builds `Phaser.Game` + registers it with the bridge                                    |
+
+The placeholder room WORKS now: build a `RoomCanvas` React component that mounts
+a `<div ref>` and calls `createGame(ref.current)` in `useLayoutEffect`. Click
+the orange square → React receives `OPEN_CHAT` via `useBridge`. No art assets
+required for this phase of integration.
+
+When sprite atlases land per `ART_PLAN.md`, flip the `exists` flags in
+`assets.ts`; BootScene picks them up automatically. RoomScene then needs the
+real player/pet/tilemap rendering swapped in (currently stubbed rectangles).
+I'll do that swap as a follow-up phase once art is in.
+
+**P7 work for you (Antigravity):**
+
+- `apps/web/src/components/room/RoomCanvas.tsx` — the mount point. Uses
+  `useLayoutEffect` to call `createGame`, holds the game in a ref, calls
+  `game.destroy(true)` on unmount.
+- `apps/web/src/components/room/RoomHUD.tsx` — overlay div with streak badge,
+  level/XP chip, ink coin, quest panel button. Reads from `useMe`, `usePet`,
+  `useStreak`. Listens to bridge events (`LEVEL_UP`, `NEAR_INTERACTABLE`) for
+  transient overlays.
+
+---
+
+_Last updated: GSAP presets + Phaser bridge + BootScene/RoomScene + asset
+manifest wired. Specs for ~35 components your Antigravity work needs to fill in.
+P7 placeholder room is interactive (colored squares); art-dependent parts of
+P7/P14 remain blocked per `ART_PLAN.md`._
